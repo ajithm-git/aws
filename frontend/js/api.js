@@ -1,15 +1,19 @@
 // ============================================================
 //  Shared API + Utilities
-//  Path: event-booking/frontend/js/api.js
-//  Load this FIRST on every page — defines globals used everywhere.
+//  Path: frontend/js/api.js
+//  Load AFTER config.js on every page.
 // ============================================================
 
 // ============================================================
 //  1. CONFIG
+//  Reads from window.EVENTBOOK_CONFIG.apiBase (set in config.js)
+//  Falls back to the AWS EC2 public IP if not configured.
 // ============================================================
+const API_ORIGIN = (
+  (window.EVENTBOOK_CONFIG && window.EVENTBOOK_CONFIG.apiBase) ||
+  'http://52.62.77.45'
+).replace(/\/+$/, '');
 
-const API_ORIGIN = (window.EVENTBOOK_CONFIG?.apiBase || 'http://localhost:5000')
-  .replace(/\/+$/, '');
 const API_BASE = `${API_ORIGIN}/api`;
 
 const STORAGE_KEYS = {
@@ -123,7 +127,7 @@ function toast(message, type = 'info', duration = 3200) {
 }
 
 // ============================================================
-//  5. INLINE ALERT (for forms — replaces #msg divs)
+//  5. INLINE ALERT
 // ============================================================
 function showAlert(elementId, message, type = 'error') {
   const el = document.getElementById(elementId);
@@ -293,7 +297,6 @@ function renderNavbar(activePath = '') {
   const navbar = document.querySelector('.navbar');
   if (!navbar) return;
 
-  // Update nav links according to auth state
   const navLogin = document.getElementById('navLogin');
   const navLogout = document.getElementById('navLogout');
   const navDash = document.getElementById('navDash');
@@ -317,7 +320,6 @@ function renderNavbar(activePath = '') {
     if (navUser) navUser.classList.add('hidden');
   }
 
-  // Highlight active link
   document.querySelectorAll('.nav-links a').forEach(a => {
     if (a.getAttribute('href') === activePath) {
       a.style.color = 'var(--violet-600)';
@@ -334,8 +336,9 @@ window.addEventListener('scroll', () => {
 });
 
 // ============================================================
-//  10. EXPORTS (global — no modules needed)
+//  10. EXPORTS
 // ============================================================
+window.API_ORIGIN = API_ORIGIN;
 window.API_BASE = API_BASE;
 window.api = api;
 window.store = store;

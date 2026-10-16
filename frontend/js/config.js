@@ -1,3 +1,3 @@
 window.EVENTBOOK_CONFIG = Object.freeze({
-  apiBase: 'http://localhost:5000'
+  apiBase: 'http://52.62.77.45'
 });
