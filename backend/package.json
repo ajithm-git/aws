@@ -1,0 +1,33 @@
+{
+  "name": "event-booking-backend",
+  "version": "2.0.0",
+  "description": "EventBook — Premium Event Booking API (Node.js + Express + MongoDB + AWS SNS/SQS)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "keywords": ["events", "booking", "aws", "express", "mongodb"],
+  "author": "EventBook",
+  "license": "MIT",
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.450.0",
+    "@aws-sdk/client-secrets-manager": "^3.450.0",
+    "@aws-sdk/client-sns": "^3.450.0",
+    "@aws-sdk/client-sqs": "^3.450.0",
+    "@aws-sdk/s3-presigned-post": "^3.450.0",
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "express-rate-limit": "^7.1.5",
+    "helmet": "^7.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^7.6.3",
+    "morgan": "^1.10.0",
+    "nodemailer": "^6.9.7"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  }
+}

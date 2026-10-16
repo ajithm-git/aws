@@ -1,0 +1,530 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: EventBook production foundation — CloudFront/S3, API Gateway/EC2, DocumentDB, SQS/Lambda, and SNS.
+
+Parameters:
+  ArtifactBucket:
+    Type: String
+    Description: Private S3 bucket created by scripts/deploy.ps1 for application archives.
+  BackendCodeKey:
+    Type: String
+    Default: backend.zip
+  WorkerCodeKey:
+    Type: String
+    Default: email-worker.zip
+  EmailFromAddress:
+    Type: String
+    Description: Verified SES sender address in this region.
+    AllowedPattern: '^[^@]+@[^@]+\.[^@]+$'
+  EC2InstanceType:
+    Type: String
+    Default: t3.small
+    AllowedValues: [t3.small, t3.medium, t3.large]
+  DocumentDBInstanceClass:
+    Type: String
+    Default: db.t3.medium
+    AllowedValues: [db.t3.medium, db.r6g.large]
+
+Resources:
+  EventBookVpc:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.40.0.0/16
+      EnableDnsHostnames: true
+      EnableDnsSupport: true
+      Tags:
+        - Key: Name
+          Value: !Sub ${AWS::StackName}-vpc
+
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+  VpcInternetGatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      InternetGatewayId: !Ref InternetGateway
+      VpcId: !Ref EventBookVpc
+
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref EventBookVpc
+  PublicDefaultRoute:
+    Type: AWS::EC2::Route
+    DependsOn: VpcInternetGatewayAttachment
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+
+  PublicSubnetA:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref EventBookVpc
+      CidrBlock: 10.40.1.0/24
+      AvailabilityZone: !Select [0, !GetAZs '']
+      MapPublicIpOnLaunch: true
+  PublicSubnetB:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref EventBookVpc
+      CidrBlock: 10.40.2.0/24
+      AvailabilityZone: !Select [1, !GetAZs '']
+      MapPublicIpOnLaunch: true
+  PrivateSubnetA:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref EventBookVpc
+      CidrBlock: 10.40.11.0/24
+      AvailabilityZone: !Select [0, !GetAZs '']
+  PrivateSubnetB:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref EventBookVpc
+      CidrBlock: 10.40.12.0/24
+      AvailabilityZone: !Select [1, !GetAZs '']
+
+  PublicSubnetARouteAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      SubnetId: !Ref PublicSubnetA
+  PublicSubnetBRouteAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      SubnetId: !Ref PublicSubnetB
+
+  ArtifactBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref ArtifactBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Deny
+            Principal: '*'
+            Action: s3:*
+            Resource:
+              - !Sub arn:${AWS::Partition}:s3:::${ArtifactBucket}
+              - !Sub arn:${AWS::Partition}:s3:::${ArtifactBucket}/*
+            Condition:
+              Bool:
+                aws:SecureTransport: false
+
+  AssetsBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      CorsConfiguration:
+        CorsRules:
+          - AllowedHeaders: ['*']
+            AllowedMethods: [GET, HEAD, POST]
+            AllowedOrigins: ['*']
+            MaxAge: 3000
+      VersioningConfiguration:
+        Status: Enabled
+
+  CloudFrontOriginAccessControl:
+    Type: AWS::CloudFront::OriginAccessControl
+    Properties:
+      OriginAccessControlConfig:
+        Name: !Sub ${AWS::StackName}-assets-oac
+        OriginAccessControlOriginType: s3
+        SigningBehavior: always
+        SigningProtocol: sigv4
+
+  WebsiteDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Enabled: true
+        DefaultRootObject: index.html
+        HttpVersion: http2
+        Origins:
+          - Id: EventBookS3Origin
+            DomainName: !GetAtt AssetsBucket.RegionalDomainName
+            OriginAccessControlId: !Ref CloudFrontOriginAccessControl
+            S3OriginConfig:
+              OriginAccessIdentity: ''
+        DefaultCacheBehavior:
+          TargetOriginId: EventBookS3Origin
+          ViewerProtocolPolicy: redirect-to-https
+          AllowedMethods: [GET, HEAD, OPTIONS]
+          CachedMethods: [GET, HEAD, OPTIONS]
+          Compress: true
+          CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6
+        PriceClass: PriceClass_100
+        ViewerCertificate:
+          CloudFrontDefaultCertificate: true
+
+  AssetsBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref AssetsBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: AllowCloudFrontRead
+            Effect: Allow
+            Principal:
+              Service: cloudfront.amazonaws.com
+            Action: s3:GetObject
+            Resource: !Sub ${AssetsBucket.Arn}/*
+            Condition:
+              StringEquals:
+                AWS:SourceArn: !Sub arn:${AWS::Partition}:cloudfront::${AWS::AccountId}:distribution/${WebsiteDistribution}
+
+  NotificationTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      DisplayName: EventBook notifications
+      TopicName: !Sub ${AWS::StackName}-notifications
+
+  EmailDeadLetterQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      MessageRetentionPeriod: 1209600
+      QueueName: !Sub ${AWS::StackName}-email-dlq
+      SqsManagedSseEnabled: true
+  EmailQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      VisibilityTimeout: 300
+      QueueName: !Sub ${AWS::StackName}-email
+      SqsManagedSseEnabled: true
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt EmailDeadLetterQueue.Arn
+        maxReceiveCount: 5
+
+  DatabaseSecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Description: EventBook DocumentDB credentials
+      GenerateSecretString:
+        SecretStringTemplate: '{"username":"eventbook"}'
+        GenerateStringKey: password
+        PasswordLength: 32
+        ExcludePunctuation: true
+  ApplicationSecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Description: EventBook JWT and initial admin credentials
+      GenerateSecretString:
+        SecretStringTemplate: '{"adminEmail":"","adminPassword":""}'
+        GenerateStringKey: jwtSecret
+        PasswordLength: 64
+        ExcludePunctuation: true
+
+  DatabaseSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow only the EventBook API instance to access DocumentDB
+      VpcId: !Ref EventBookVpc
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 27017
+          ToPort: 27017
+          SourceSecurityGroupId: !Ref ApiInstanceSecurityGroup
+  DatabaseSubnetGroup:
+    Type: AWS::DocDB::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: Private DocumentDB subnets
+      SubnetIds: [!Ref PrivateSubnetA, !Ref PrivateSubnetB]
+  DocumentDatabase:
+    Type: AWS::DocDB::DBCluster
+    DeletionPolicy: Snapshot
+    UpdateReplacePolicy: Snapshot
+    Properties:
+      DBClusterIdentifier: !Sub ${AWS::StackName}-db
+      EngineVersion: '5.0.0'
+      MasterUsername: !Sub '{{resolve:secretsmanager:${DatabaseSecret}:SecretString:username}}'
+      MasterUserPassword: !Sub '{{resolve:secretsmanager:${DatabaseSecret}:SecretString:password}}'
+      DBSubnetGroupName: !Ref DatabaseSubnetGroup
+      VpcSecurityGroupIds: [!GetAtt DatabaseSecurityGroup.GroupId]
+      StorageEncrypted: true
+      BackupRetentionPeriod: 7
+      DeletionProtection: false
+  DocumentDatabaseInstance:
+    Type: AWS::DocDB::DBInstance
+    Properties:
+      DBClusterIdentifier: !Ref DocumentDatabase
+      DBInstanceClass: !Ref DocumentDBInstanceClass
+
+  LoadBalancerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Accept private API Gateway VPC Link traffic
+      VpcId: !Ref EventBookVpc
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 10.40.0.0/16
+  ApiInstanceSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: EventBook API; no public inbound administration
+      VpcId: !Ref EventBookVpc
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 5000
+          ToPort: 5000
+          SourceSecurityGroupId: !Ref LoadBalancerSecurityGroup
+
+  ApiInstanceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ec2.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - !Sub arn:${AWS::Partition}:iam::aws:policy/AmazonSSMManagedInstanceCore
+      Policies:
+        - PolicyName: EventBookRuntimeAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: [secretsmanager:GetSecretValue]
+                Resource: [!Ref DatabaseSecret, !Ref ApplicationSecret]
+              - Effect: Allow
+                Action: [sqs:SendMessage]
+                Resource: [!GetAtt EmailQueue.Arn]
+              - Effect: Allow
+                Action: [sns:Publish]
+                Resource: [!Ref NotificationTopic]
+              - Effect: Allow
+                Action: [s3:PutObject]
+                Resource: !Sub ${AssetsBucket.Arn}/uploads/*
+              - Effect: Allow
+                Action: [s3:GetObject]
+                Resource: !Sub arn:${AWS::Partition}:s3:::${ArtifactBucket}/${BackendCodeKey}
+  ApiInstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Roles: [!Ref ApiInstanceRole]
+
+  ApiInstance:
+    Type: AWS::EC2::Instance
+    DependsOn:
+      - DocumentDatabaseInstance
+      - VpcInternetGatewayAttachment
+    Properties:
+      ImageId: !Sub '{{resolve:ssm:/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64}}'
+      InstanceType: !Ref EC2InstanceType
+      IamInstanceProfile: !Ref ApiInstanceProfile
+      NetworkInterfaces:
+        - AssociatePublicIpAddress: true
+          DeviceIndex: '0'
+          SubnetId: !Ref PublicSubnetA
+          GroupSet: [!Ref ApiInstanceSecurityGroup]
+      BlockDeviceMappings:
+        - DeviceName: /dev/xvda
+          Ebs:
+            VolumeSize: 20
+            Encrypted: true
+            VolumeType: gp3
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          set -euo pipefail
+          dnf install -y nodejs npm unzip
+          mkdir -p /opt/eventbook
+          aws s3 cp s3://${ArtifactBucket}/${BackendCodeKey} /tmp/eventbook-backend.zip --region ${AWS::Region}
+          unzip -q /tmp/eventbook-backend.zip -d /opt/eventbook
+          cd /opt/eventbook
+          npm ci --omit=dev
+          curl -fsSL https://truststore.pki.rds.amazonaws.com/global/global-bundle.pem -o /etc/pki/tls/certs/rds-combined-ca-bundle.pem
+          cat > /etc/systemd/system/eventbook.service <<'UNIT'
+          [Unit]
+          Description=EventBook REST API
+          After=network-online.target
+          Wants=network-online.target
+          [Service]
+          Type=simple
+          WorkingDirectory=/opt/eventbook
+          Environment=NODE_ENV=production
+          Environment=PORT=5000
+          Environment=AWS_REGION=${AWS::Region}
+          Environment=DB_SECRET_ARN=${DatabaseSecret}
+          Environment=APP_SECRET_ARN=${ApplicationSecret}
+          Environment=DOCDB_ENDPOINT=${DocumentDatabase.Endpoint}
+          Environment=DOCDB_TLS_CA_FILE=/etc/pki/tls/certs/rds-combined-ca-bundle.pem
+          Environment=MONGO_DATABASE=eventbook
+          Environment=SQS_QUEUE_URL=${EmailQueue}
+          Environment=USE_SQS_QUEUE=true
+          Environment=SNS_TOPIC_ARN=${NotificationTopic}
+          Environment=EVENT_IMAGE_BUCKET=${AssetsBucket}
+          Environment=ASSET_BASE_URL=https://${WebsiteDistribution.DomainName}
+          Environment=FRONTEND_URL=https://${WebsiteDistribution.DomainName}
+          Environment=CORS_ORIGINS=https://${WebsiteDistribution.DomainName}
+          ExecStart=/usr/bin/npm start
+          Restart=on-failure
+          RestartSec=5
+          User=ec2-user
+          [Install]
+          WantedBy=multi-user.target
+          UNIT
+          chown -R ec2-user:ec2-user /opt/eventbook
+          systemctl daemon-reload
+          systemctl enable --now eventbook
+      Tags:
+        - Key: Name
+          Value: !Sub ${AWS::StackName}-api
+
+  InternalLoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Scheme: internal
+      Type: network
+      Subnets: [!Ref PrivateSubnetA, !Ref PrivateSubnetB]
+      SecurityGroups: [!Ref LoadBalancerSecurityGroup]
+  ApiTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      VpcId: !Ref EventBookVpc
+      Protocol: TCP
+      Port: 5000
+      TargetType: instance
+      Targets:
+        - Id: !Ref ApiInstance
+          Port: 5000
+      HealthCheckEnabled: true
+      HealthCheckProtocol: HTTP
+      HealthCheckPort: '5000'
+      HealthCheckPath: /api/health
+      Matcher:
+        HttpCode: '200'
+  ApiListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      LoadBalancerArn: !Ref InternalLoadBalancer
+      Port: 80
+      Protocol: TCP
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref ApiTargetGroup
+
+  ApiVpcLink:
+    Type: AWS::ApiGateway::VpcLink
+    Properties:
+      Name: !Sub ${AWS::StackName}-vpc-link
+      TargetArns: [!Ref InternalLoadBalancer]
+  RestApi:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Name: !Sub ${AWS::StackName}-rest-api
+      EndpointConfiguration:
+        Types: [REGIONAL]
+  ApiProxyResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref RestApi
+      ParentId: !GetAtt RestApi.RootResourceId
+      PathPart: '{proxy+}'
+  ApiProxyMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref RestApi
+      ResourceId: !Ref ApiProxyResource
+      HttpMethod: ANY
+      AuthorizationType: NONE
+      RequestParameters:
+        method.request.path.proxy: true
+      Integration:
+        Type: HTTP_PROXY
+        IntegrationHttpMethod: ANY
+        ConnectionType: VPC_LINK
+        ConnectionId: !Ref ApiVpcLink
+        Uri: !Sub http://${InternalLoadBalancer.DNSName}/{proxy}
+        RequestParameters:
+          integration.request.path.proxy: method.request.path.proxy
+  ApiDeployment:
+    Type: AWS::ApiGateway::Deployment
+    DependsOn: ApiProxyMethod
+    Properties:
+      RestApiId: !Ref RestApi
+      StageName: prod
+
+  EmailWorkerRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - !Sub arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: EventBookEmailDelivery
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: [sqs:ReceiveMessage, sqs:DeleteMessage, sqs:GetQueueAttributes]
+                Resource: [!GetAtt EmailQueue.Arn]
+              - Effect: Allow
+                Action: [ses:SendEmail]
+                Resource: '*'
+  EmailWorker:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub ${AWS::StackName}-email-worker
+      Runtime: nodejs22.x
+      Handler: index.handler
+      Role: !GetAtt EmailWorkerRole.Arn
+      Timeout: 30
+      MemorySize: 256
+      Code:
+        S3Bucket: !Ref ArtifactBucket
+        S3Key: !Ref WorkerCodeKey
+      Environment:
+        Variables:
+          EMAIL_FROM: !Ref EmailFromAddress
+          FRONTEND_URL: !Sub https://${WebsiteDistribution.DomainName}
+  EmailWorkerMapping:
+    Type: AWS::Lambda::EventSourceMapping
+    Properties:
+      EventSourceArn: !GetAtt EmailQueue.Arn
+      FunctionName: !Ref EmailWorker
+      Enabled: true
+      BatchSize: 10
+      FunctionResponseTypes: [ReportBatchItemFailures]
+
+Outputs:
+  WebsiteUrl:
+    Description: HTTPS website URL
+    Value: !Sub https://${WebsiteDistribution.DomainName}
+  ApiBaseUrl:
+    Description: API base URL (append /api to call application routes)
+    Value: !Sub https://${RestApi}.execute-api.${AWS::Region}.${AWS::URLSuffix}/prod
+  AssetsBucketName:
+    Value: !Ref AssetsBucket
+  ApplicationSecretArn:
+    Value: !Ref ApplicationSecret
+  DatabaseSecretArn:
+    Value: !Ref DatabaseSecret
+  EmailQueueUrl:
+    Value: !Ref EmailQueue
+  EmailDeadLetterQueueUrl:
+    Value: !Ref EmailDeadLetterQueue
+  NotificationsTopicArn:
+    Value: !Ref NotificationTopic
+  ApiInstanceId:
+    Value: !Ref ApiInstance
+  CloudFrontDistributionId:
+    Value: !Ref WebsiteDistribution

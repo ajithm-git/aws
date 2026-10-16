@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Forgot Password — EventBook</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="auth-wrap">
+    <div class="auth-card">
+      <div class="auth-logo">🎫 EventBook</div>
+      <h1 class="auth-title">🔑 Forgot Password</h1>
+      <p class="auth-sub">We'll email you a reset OTP</p>
+      <div id="alert" class="alert"></div>
+      <form id="forgotForm" novalidate>
+        <div class="form-group">
+          <label class="form-label">Email Address</label>
+          <input class="input" type="email" id="email" required>
+        </div>
+        <button type="submit" id="submitBtn" class="btn btn-primary btn-full btn-lg">Send Reset OTP →</button>
+      </form>
+      <div class="auth-links" style="justify-content:center;">
+        <a href="login.html">← Back to login</a>
+      </div>
+    </div>
+  </div>
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/forgot.js"></script>
+</body>
+</html>

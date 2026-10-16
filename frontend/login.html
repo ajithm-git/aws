@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Login to EventBook — access your bookings and discover new events.">
+  <title>Login — EventBook</title>
+
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <div class="auth-wrap">
+    <div class="auth-card">
+
+      <!-- Brand -->
+      <div class="auth-logo">🎫 EventBook</div>
+      <h1 class="auth-title">Welcome Back 👋</h1>
+      <p class="auth-sub">Login to book your next experience</p>
+
+      <!-- Inline alert -->
+      <div id="alert" class="alert"></div>
+
+      <!-- Login Form -->
+      <form id="loginForm" autocomplete="on" novalidate>
+
+        <div class="form-group">
+          <label class="form-label" for="email">Email Address</label>
+          <input
+            class="input"
+            type="email"
+            id="email"
+            name="email"
+            placeholder="you@example.com"
+            autocomplete="email"
+            required
+          >
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="password">Password</label>
+          <div class="relative">
+            <input
+              class="input"
+              type="password"
+              id="password"
+              name="password"
+              placeholder="Enter your password"
+              autocomplete="current-password"
+              style="padding-right:44px;"
+              required
+            >
+            <button
+              type="button"
+              onclick="togglePassword('password', this)"
+              style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;font-size:16px;opacity:0.7;"
+              aria-label="Toggle password visibility"
+            >👁️</button>
+          </div>
+        </div>
+
+        <button type="submit" id="loginBtn" class="btn btn-primary btn-full btn-lg mt-2">
+          Login →
+        </button>
+
+      </form>
+
+      <!-- Links -->
+      <div class="auth-links">
+        <a href="forgot.html">Forgot password?</a>
+        <a href="register.html">Create account</a>
+      </div>
+
+      <!-- Admin link -->
+      <div class="auth-divider">
+        <a href="admin-login.html">🔐 Admin Login →</a>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       SCRIPTS
+  ════════════════════════════════════════════ -->
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/login.js"></script>
+
+</body>
+</html>

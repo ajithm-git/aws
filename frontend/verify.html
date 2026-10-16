@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Verify your EventBook email with a 6-digit OTP code.">
+  <title>Verify Email — EventBook</title>
+
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <div class="auth-wrap">
+    <div class="auth-card">
+
+      <!-- Brand -->
+      <div class="auth-logo">🎫 EventBook</div>
+      <h1 class="auth-title">📧 Verify Your Email</h1>
+      <p class="auth-sub">
+        We sent a 6-digit code to
+        <strong id="emailDisplay" style="color:var(--violet-400);">your email</strong>
+      </p>
+
+      <!-- Alert -->
+      <div id="alert" class="alert"></div>
+
+      <!-- OTP Form -->
+      <form id="verifyForm" novalidate>
+
+        <!-- 6-box OTP input -->
+        <div class="form-group">
+          <label class="form-label" style="text-align:center;display:block;">Enter the 6-digit code</label>
+          <div id="otpWrap" class="otp-wrap" role="group" aria-label="One time passcode">
+            <input class="otp-box" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" autocomplete="one-time-code" aria-label="Digit 1" autofocus>
+            <input class="otp-box" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" aria-label="Digit 2">
+            <input class="otp-box" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" aria-label="Digit 3">
+            <input class="otp-box" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" aria-label="Digit 4">
+            <input class="otp-box" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" aria-label="Digit 5">
+            <input class="otp-box" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" aria-label="Digit 6">
+          </div>
+        </div>
+
+        <!-- Timer -->
+        <div class="text-center" style="font-size:12px;color:var(--text-4);margin-top:-4px;margin-bottom:14px;">
+          Code expires in <span id="timer" class="mono" style="color:var(--violet-400);font-weight:700;">10:00</span>
+        </div>
+
+        <!-- Submit -->
+        <button type="submit" id="verifyBtn" class="btn btn-primary btn-full btn-lg">
+          Verify &amp; Continue →
+        </button>
+
+      </form>
+
+      <!-- Resend -->
+      <div class="text-center" style="margin-top:22px;font-size:13px;color:var(--text-3);">
+        Didn't receive the code?
+        <button id="resendBtn" type="button" class="btn-ghost" style="color:var(--violet-400);font-weight:700;padding:4px 8px;">
+          Resend
+        </button>
+      </div>
+
+      <!-- Change email -->
+      <div class="auth-divider">
+        <a href="register.html">← Use a different email</a>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       SCRIPTS
+  ════════════════════════════════════════════ -->
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/verify.js"></script>
+
+  <style>
+    /* OTP 6-box layout (page-scoped) */
+    .otp-wrap {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      margin-top: 8px;
+    }
+    .otp-box {
+      width: 52px;
+      height: 62px;
+      text-align: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 24px;
+      font-weight: 800;
+      color: #fff;
+      background: rgba(255, 255, 255, 0.07);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 12px;
+      outline: none;
+      transition: all 0.2s ease;
+      caret-color: #a855f7;
+    }
+    .otp-box:focus {
+      border-color: #a855f7;
+      background: rgba(168, 85, 247, 0.12);
+      box-shadow: 0 0 0 4px rgba(168, 85, 247, 0.18);
+      transform: translateY(-2px);
+    }
+    .otp-box.filled {
+      border-color: rgba(168, 85, 247, 0.5);
+      background: rgba(168, 85, 247, 0.08);
+    }
+    .otp-box.error {
+      border-color: #ef4444;
+      background: rgba(239, 68, 68, 0.1);
+      animation: shake 0.4s;
+    }
+    .otp-box.success {
+      border-color: #10b981;
+      background: rgba(16, 185, 129, 0.12);
+    }
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-6px); }
+      75% { transform: translateX(6px); }
+    }
+    @media (max-width: 480px) {
+      .otp-box { width: 42px; height: 52px; font-size: 20px; }
+      .otp-wrap { gap: 6px; }
+    }
+  </style>
+
+</body>
+</html>

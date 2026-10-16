@@ -1,0 +1,9 @@
+{
+  "name": "eventbook-email-worker",
+  "version": "1.0.0",
+  "private": true,
+  "main": "index.js",
+  "dependencies": {
+    "@aws-sdk/client-sesv2": "^3.450.0"
+  }
+}

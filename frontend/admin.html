@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Admin Dashboard — EventBook</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <div class="navbar-inner">
+      <a href="admin.html" class="brand"><span>🛠️</span><span class="brand-mark">Admin Panel</span></a>
+      <div class="nav-links">
+        <a href="index.html">View Site</a>
+        <button onclick="logout()" class="btn-ghost">Logout</button>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container" style="padding-top:calc(var(--nav-h) + 32px);padding-bottom:60px;">
+    <h1 style="margin-bottom:24px;">Dashboard Overview 📊</h1>
+
+    <div id="stats" class="grid grid-4" style="margin-bottom:32px;"></div>
+
+    <section class="glass-strong" style="padding:32px;border-radius:24px;margin-bottom:32px;">
+      <h2 style="font-size:22px;margin-bottom:20px;">➕ Create New Event</h2>
+      <div id="alert" class="alert"></div>
+      <form id="eventForm" class="grid grid-2">
+        <input class="input" id="e_title" placeholder="Event title" required>
+        <select class="input" id="e_category" required>
+          <option value="Concert">Concert</option>
+          <option value="Conference">Conference</option>
+          <option value="Sports">Sports</option>
+          <option value="Workshop">Workshop</option>
+          <option value="Theater">Theater</option>
+          <option value="Comedy">Comedy</option>
+          <option value="Festival">Festival</option>
+          <option value="Exhibition">Exhibition</option>
+          <option value="General">General</option>
+        </select>
+        <input class="input" id="e_venue" placeholder="Venue" required>
+        <input class="input" id="e_city" placeholder="City">
+        <input class="input" type="date" id="e_date" required>
+        <input class="input" id="e_time" placeholder="Time (e.g. 7:00 PM)">
+        <input class="input" type="number" id="e_price" placeholder="Price per seat (₹)" min="0" required>
+        <input class="input" type="number" id="e_seats" placeholder="Total seats" min="1" required>
+        <input class="input" id="e_image" placeholder="Image URL" required style="grid-column:span 2;">
+        <label class="form-label" for="e_image_file" style="grid-column:span 2;">
+          Or upload an image (JPG, PNG or WebP, up to 5 MB)
+          <input class="input" type="file" id="e_image_file" accept="image/jpeg,image/png,image/webp" style="margin-top:8px;">
+        </label>
+        <p id="imageUploadStatus" class="text-muted" role="status" style="grid-column:span 2;font-size:13px;"></p>
+        <textarea class="input" id="e_description" placeholder="Description" rows="3" style="grid-column:span 2;"></textarea>
+        <button type="submit" id="createBtn" class="btn btn-primary" style="grid-column:span 2;">Publish Event 🚀</button>
+      </form>
+    </section>
+
+    <section style="margin-bottom:32px;">
+      <h2 style="font-size:22px;margin-bottom:16px;">📅 All Events</h2>
+      <div id="eventList" class="grid grid-2"></div>
+    </section>
+
+    <section style="margin-bottom:32px;">
+      <h2 style="font-size:22px;margin-bottom:16px;">👥 Users</h2>
+      <div id="userList" class="grid grid-2"></div>
+    </section>
+
+    <section>
+      <h2 style="font-size:22px;margin-bottom:16px;">🧾 Recent Bookings</h2>
+      <div id="bookingList"></div>
+    </section>
+  </main>
+
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/admin.js"></script>
+</body>
+</html>

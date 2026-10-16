@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Create your EventBook account — verify via OTP and start booking events.">
+  <title>Create Account — EventBook</title>
+
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <div class="auth-wrap">
+    <div class="auth-card">
+
+      <!-- Brand -->
+      <div class="auth-logo">🎫 EventBook</div>
+      <h1 class="auth-title">Create Account ✨</h1>
+      <p class="auth-sub">We'll send a 6-digit OTP to verify your email</p>
+
+      <!-- Alert -->
+      <div id="alert" class="alert"></div>
+
+      <!-- Register Form -->
+      <form id="registerForm" autocomplete="on" novalidate>
+
+        <!-- Full name -->
+        <div class="form-group">
+          <label class="form-label" for="name">Full Name</label>
+          <input
+            class="input"
+            type="text"
+            id="name"
+            name="name"
+            placeholder="e.g. Aditya Sharma"
+            autocomplete="name"
+            minlength="2"
+            maxlength="60"
+            required
+          >
+        </div>
+
+        <!-- Email -->
+        <div class="form-group">
+          <label class="form-label" for="email">Email Address</label>
+          <input
+            class="input"
+            type="email"
+            id="email"
+            name="email"
+            placeholder="you@example.com"
+            autocomplete="email"
+            required
+          >
+        </div>
+
+        <!-- Phone (optional) -->
+        <div class="form-group">
+          <label class="form-label" for="phone">Phone <span style="color:var(--text-4);font-weight:500;">(optional)</span></label>
+          <input
+            class="input"
+            type="tel"
+            id="phone"
+            name="phone"
+            placeholder="+91 98765 43210"
+            autocomplete="tel"
+            maxlength="20"
+          >
+        </div>
+
+        <!-- Password -->
+        <div class="form-group">
+          <label class="form-label" for="password">Password</label>
+          <div class="relative">
+            <input
+              class="input"
+              type="password"
+              id="password"
+              name="password"
+              placeholder="Minimum 6 characters"
+              autocomplete="new-password"
+              style="padding-right:44px;"
+              minlength="6"
+              required
+            >
+            <button
+              type="button"
+              onclick="togglePassword('password', this)"
+              style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;font-size:16px;opacity:0.7;"
+              aria-label="Toggle password visibility"
+            >👁️</button>
+          </div>
+
+          <!-- Password strength meter -->
+          <div style="margin-top:8px;">
+            <div style="display:flex;gap:4px;">
+              <div class="pw-seg" data-idx="1"></div>
+              <div class="pw-seg" data-idx="2"></div>
+              <div class="pw-seg" data-idx="3"></div>
+              <div class="pw-seg" data-idx="4"></div>
+            </div>
+            <div id="pwHint" style="font-size:11px;color:var(--text-4);margin-top:6px;">
+              Use 8+ characters with a mix of letters, numbers &amp; symbols.
+            </div>
+          </div>
+        </div>
+
+        <!-- Terms -->
+        <div class="form-group" style="margin-top:20px;">
+          <label style="display:flex;align-items:flex-start;gap:8px;font-size:12px;color:var(--text-3);cursor:pointer;">
+            <input type="checkbox" id="terms" required style="margin-top:3px;accent-color:#a855f7;">
+            <span>
+              I agree to the <a href="#" style="color:var(--violet-400);">Terms of Service</a>
+              and <a href="#" style="color:var(--violet-400);">Privacy Policy</a>.
+            </span>
+          </label>
+        </div>
+
+        <button type="submit" id="registerBtn" class="btn btn-primary btn-full btn-lg mt-2">
+          Create Account &amp; Send OTP →
+        </button>
+
+      </form>
+
+      <!-- Links -->
+      <div class="auth-links" style="justify-content:center;">
+        <span>Already have an account?</span>
+        <a href="login.html" style="margin-left:6px;">Login →</a>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       SCRIPTS
+  ════════════════════════════════════════════ -->
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/register.js"></script>
+
+  <style>
+    /* Password strength segments (page-scoped) */
+    .pw-seg {
+      flex: 1;
+      height: 4px;
+      border-radius: 2px;
+      background: rgba(255, 255, 255, 0.08);
+      transition: background 0.25s ease;
+    }
+    .pw-seg.on-weak { background: #ef4444; }
+    .pw-seg.on-fair { background: #f59e0b; }
+    .pw-seg.on-good { background: #22d3ee; }
+    .pw-seg.on-strong { background: #10b981; }
+  </style>
+
+</body>
+</html>

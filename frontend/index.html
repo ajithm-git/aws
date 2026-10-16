@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="EventBook — Book concerts, conferences, sports & workshops. Premium event booking platform.">
+  <title>EventBook — Discover & Book Events</title>
+
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- ═══════════════════════════════════════════
+       NAVBAR
+  ════════════════════════════════════════════ -->
+  <nav class="navbar">
+    <div class="navbar-inner">
+      <a href="index.html" class="brand">
+        <span>🎫</span>
+        <span class="brand-mark">EventBook</span>
+      </a>
+
+      <div class="nav-links">
+        <a href="index.html">Home</a>
+        <a href="dashboard.html" id="navDash" class="hidden">My Bookings</a>
+        <a href="admin.html" id="navAdmin" class="hidden">Admin</a>
+        <a href="login.html" id="navLogin">Login</a>
+        <a href="register.html" id="navRegister" class="hide-sm">Sign Up</a>
+        <button id="navLogout" onclick="logout()" class="btn-ghost hidden" style="font-size:13px;">Logout</button>
+        <div id="navUser" class="avatar hidden"></div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ═══════════════════════════════════════════
+       HERO
+  ════════════════════════════════════════════ -->
+  <section class="hero">
+    <div class="container">
+      <h1 class="hero-title">
+        Book Amazing <span class="text-gradient">Experiences</span>
+      </h1>
+      <p class="hero-sub">
+        Concerts • Conferences • Sports • Workshops • Comedy • Theatre — all in one place.
+      </p>
+    </div>
+
+    <!-- ═══════════════════════════════════════════
+         CAROUSEL
+    ════════════════════════════════════════════ -->
+    <div class="container">
+      <div id="carouselWrap" class="carousel-wrap" style="display:none;">
+        <div id="carouselTrack" class="carousel-track"></div>
+
+        <button class="carousel-nav prev" onclick="slideCarousel(-1)" aria-label="Previous">‹</button>
+        <button class="carousel-nav next" onclick="slideCarousel(1)" aria-label="Next">›</button>
+
+        <div id="carouselDots" class="carousel-dots"></div>
+      </div>
+
+      <!-- Skeleton while loading -->
+      <div id="carouselSkeleton" class="skeleton skeleton-card"></div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════
+       CATEGORIES + SEARCH + EVENT GRID
+  ════════════════════════════════════════════ -->
+  <section class="section" style="padding-top:0;">
+    <div class="container">
+
+      <!-- Header row -->
+      <div class="flex items-center justify-between flex-wrap gap-4 mb-6">
+        <div>
+          <h2 style="margin-bottom:4px;">Upcoming Events</h2>
+          <p class="text-muted" style="font-size:14px;" id="eventCount">Loading...</p>
+        </div>
+
+        <!-- Search + Sort -->
+        <div class="flex gap-3 items-center" style="flex-wrap:wrap;">
+          <input
+            id="searchInput"
+            class="input"
+            type="text"
+            placeholder="🔍 Search events, venues..."
+            style="max-width:260px;"
+          >
+          <select id="sortSelect" class="input" style="width:auto;padding-right:34px;">
+            <option value="date">Soonest first</option>
+            <option value="-date">Latest first</option>
+            <option value="price">Price: Low → High</option>
+            <option value="-price">Price: High → Low</option>
+            <option value="newest">Recently added</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Category chips -->
+      <div id="categoryChips" class="chips"></div>
+
+      <!-- Event grid -->
+      <div id="eventGrid" class="grid grid-3"></div>
+
+      <!-- Skeleton while loading -->
+      <div id="gridSkeleton" class="grid grid-3">
+        <div class="skeleton skeleton-card"></div>
+        <div class="skeleton skeleton-card"></div>
+        <div class="skeleton skeleton-card"></div>
+      </div>
+
+      <!-- Empty state -->
+      <div id="emptyState" class="empty-state hidden">
+        <div class="empty-state-icon">🎭</div>
+        <h3>No events found</h3>
+        <p>Try a different category or search term.</p>
+      </div>
+
+      <div id="loadErrorState" class="alert alert-error" role="alert">
+        Events could not be loaded. Check your connection and try again.
+        <button type="button" class="btn btn-secondary btn-sm" onclick="loadEvents(true)" style="margin-left:10px;">
+          Try again
+        </button>
+      </div>
+
+      <!-- Load more -->
+      <div id="loadMoreWrap" class="text-center mt-8 hidden">
+        <button id="loadMoreBtn" class="btn btn-secondary">Load more events</button>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════
+       FOOTER
+  ════════════════════════════════════════════ -->
+  <footer class="footer">
+    <div class="container">
+      <p style="margin-bottom:8px;">
+        <span style="font-weight:800;font-size:16px;" class="text-gradient">🎫 EventBook</span>
+      </p>
+      <p>Book amazing experiences, all in one place.</p>
+      <p style="margin-top:14px;">
+        <a href="index.html">Home</a> •
+        <a href="login.html">Login</a> •
+        <a href="register.html">Sign Up</a>
+      </p>
+      <p style="margin-top:14px;">© <span id="year"></span> EventBook. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <!-- ═══════════════════════════════════════════
+       SCRIPTS
+  ════════════════════════════════════════════ -->
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/home.js"></script>
+  <script>
+    // Set year in footer
+    document.getElementById('year').textContent = new Date().getFullYear();
+    // Render navbar state
+    renderNavbar('index.html');
+  </script>
+
+</body>
+</html>

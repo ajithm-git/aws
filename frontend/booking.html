@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Booking — EventBook</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <nav class="navbar">
+    <div class="navbar-inner">
+      <a href="index.html" class="brand"><span>🎫</span><span class="brand-mark">EventBook</span></a>
+      <div class="nav-links">
+        <a href="index.html">Home</a>
+        <a href="dashboard.html">My Bookings</a>
+        <button onclick="logout()" class="btn-ghost">Logout</button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="auth-wrap">
+    <div class="auth-card" style="max-width:560px;">
+      <h1 class="auth-title">Complete Your Booking 🎟️</h1>
+      <p class="auth-sub">Review details and pay securely</p>
+
+      <div id="alert" class="alert"></div>
+
+      <div id="eventSummary" class="glass" style="padding:18px;margin-bottom:22px;border-radius:16px;"></div>
+
+      <form id="bookingForm" novalidate>
+
+        <div class="form-group">
+          <label class="form-label" for="seats">Number of seats (1–10)</label>
+          <input class="input" type="number" id="seats" value="1" min="1" max="10" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Demo payment option</label>
+          <div id="payMethods" class="grid grid-4" style="gap:8px;"></div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="notes">Special notes (optional)</label>
+          <textarea class="input" id="notes" rows="2" maxlength="300" placeholder="Any special requests?"></textarea>
+        </div>
+
+        <div class="glass" style="padding:18px;margin:16px 0;border-radius:14px;display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-weight:700;">Total amount</span>
+          <span id="totalAmount" class="text-gradient" style="font-size:24px;font-weight:900;">₹0</span>
+        </div>
+
+        <button type="submit" id="payBtn" class="btn btn-primary btn-full btn-lg">
+          Confirm booking →
+        </button>
+
+        <p style="text-align:center;font-size:11px;color:var(--text-4);margin-top:14px;">
+          🔒 Demo checkout only — no payment is processed or money charged.
+        </p>
+
+      </form>
+    </div>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/booking.js"></script>
+</body>
+</html>

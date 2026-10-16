@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 750" role="img" aria-label="Event image placeholder">
+  <defs>
+    <linearGradient id="background" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f2f0ff"/>
+      <stop offset="1" stop-color="#e8f2fb"/>
+    </linearGradient>
+    <linearGradient id="ticket" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#8170e8"/>
+      <stop offset="1" stop-color="#5265d8"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="750" fill="url(#background)"/>
+  <circle cx="970" cy="150" r="210" fill="#fff" opacity=".48"/>
+  <circle cx="185" cy="680" r="270" fill="#fff" opacity=".55"/>
+  <g transform="translate(600 375) rotate(-12)">
+    <rect x="-142" y="-96" width="284" height="192" rx="34" fill="url(#ticket)"/>
+    <path d="M-27-95v190" stroke="#fff" stroke-dasharray="12 13" stroke-opacity=".75" stroke-width="6"/>
+    <path d="M45-20h58M45 12h38" stroke="#fff" stroke-linecap="round" stroke-opacity=".9" stroke-width="12"/>
+    <path d="m-91-14 14-29 14 29 32 5-23 22 6 32-29-15-29 15 6-32-23-22z" fill="#fff" opacity=".94"/>
+  </g>
+</svg>
